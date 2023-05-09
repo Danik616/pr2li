@@ -69,6 +69,10 @@ public class PrincipalHandler {
                 .switchIfEmpty(ServerResponse.status(HttpStatus.BAD_REQUEST).build());
         });
     }
+
+    public Mono<ServerResponse> iniciarSesión(ServerRequest serverRequest){
+        return ServerResponse.ok().build();
+    }
     
 
     private boolean isValidEmail(String email) {

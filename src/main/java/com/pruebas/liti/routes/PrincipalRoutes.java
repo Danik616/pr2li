@@ -13,6 +13,7 @@ public class PrincipalRoutes {
     @Bean
     public RouterFunction<ServerResponse> routerInit(PrincipalHandler principalHandler){
         return RouterFunctions.route(GET("/listar"), principalHandler::listarUsuario)
-            .andRoute(POST("/guardar"), principalHandler::guardarUsuario);
+            .andRoute(POST("/guardar"), principalHandler::guardarUsuario)
+            .andRoute(POST("/login"), principalHandler::iniciarSesión);
     }
 }
