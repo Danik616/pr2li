@@ -3,7 +3,6 @@ package com.pruebas.liti.entity;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.MappedCollection;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Table("roles")
@@ -13,10 +12,9 @@ public class RolEntityProof {
 
     private String nombre;
 
-    @MappedCollection(idColumn = "rol_id", keyColumn = "user_id")
-    private List<UserEntityProof> users;
+    private List<RolUsuarioEntity> users;
 
-    public RolEntityProof(String nombre, List<UserEntityProof> users) {
+    public RolEntityProof(String nombre, List<RolUsuarioEntity> users) {
         this.nombre = nombre;
         this.users = users;
     }
@@ -40,13 +38,15 @@ public class RolEntityProof {
         this.nombre = nombre;
     }
 
-    public List<UserEntityProof> getUsers() {
+    public List<RolUsuarioEntity> getUsers() {
         return users;
     }
 
-    public void setUsers(List<UserEntityProof> users) {
+    public void setUsers(List<RolUsuarioEntity> users) {
         this.users = users;
     }
+
+    
 
     
 }

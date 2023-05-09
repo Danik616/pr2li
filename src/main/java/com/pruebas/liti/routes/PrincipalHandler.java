@@ -13,6 +13,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import com.pruebas.liti.Repository.IRolProofRepository;
 import com.pruebas.liti.Repository.IUserProofRepository;
 import com.pruebas.liti.dto.UserDto;
+import com.pruebas.liti.entity.RolUsuarioEntity;
 import com.pruebas.liti.entity.UserEntityProof;
 
 import reactor.core.publisher.Mono;
@@ -48,8 +49,7 @@ public class PrincipalHandler {
             Mono<ServerResponse> role = rolRepository.findById(usuariod.getRole())
                     .flatMap(rol ->{
                         UserEntityProof user=new UserEntityProof(usuariod.getEmail(), encryptedPassword);
-                        user.setRoles(Collections.singletonList(rol));
-                        //user.incrementoOpcional();
+                        user.setRoles(Collections.singletonList(new RolUsuarioEntity(rol.getId(), user.getId())));
                         return userRepository.save(user)
                                 .flatMap(savedUser -> ServerResponse.accepted().build())
                                 .switchIfEmpty(response406);

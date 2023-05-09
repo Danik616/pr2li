@@ -3,7 +3,6 @@ package com.pruebas.liti.entity;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.MappedCollection;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Table("usuario")
@@ -15,8 +14,8 @@ public class UserEntityProof {
     private String email;
     private String password;
 
-    @MappedCollection(idColumn = "user_id", keyColumn = "rol_id")
-    private List<RolEntityProof> roles;
+    
+    private List<RolUsuarioEntity> roles;
 
     public UserEntityProof(String email, String password) {
         this.email = email;
@@ -50,12 +49,13 @@ public class UserEntityProof {
         this.password = password;
     }
 
-    public List<RolEntityProof> getRoles() {
+    public List<RolUsuarioEntity> getRoles() {
         return roles;
     }
 
-    public void setRoles(List<RolEntityProof> roles) {
+    public void setRoles(List<RolUsuarioEntity> roles) {
         this.roles = roles;
     }
 
+   
 }
