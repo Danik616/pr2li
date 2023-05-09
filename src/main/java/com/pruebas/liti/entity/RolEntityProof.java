@@ -1,6 +1,6 @@
 package com.pruebas.liti.entity;
 
-import java.util.List;
+
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
@@ -12,12 +12,6 @@ public class RolEntityProof {
 
     private String nombre;
 
-    private List<RolUsuarioEntity> users;
-
-    public RolEntityProof(String nombre, List<RolUsuarioEntity> users) {
-        this.nombre = nombre;
-        this.users = users;
-    }
 
     public RolEntityProof() {
     }
@@ -38,15 +32,4 @@ public class RolEntityProof {
         this.nombre = nombre;
     }
 
-    public List<RolUsuarioEntity> getUsers() {
-        return users;
-    }
-
-    public void setUsers(List<RolUsuarioEntity> users) {
-        this.users = users;
-    }
-
-    
-
-    
 }

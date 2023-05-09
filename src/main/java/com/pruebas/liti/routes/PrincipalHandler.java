@@ -1,7 +1,5 @@
 package com.pruebas.liti.routes;
 
-import java.util.Collections;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -12,6 +10,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 
 import com.pruebas.liti.Repository.IRolProofRepository;
 import com.pruebas.liti.Repository.IUserProofRepository;
+import com.pruebas.liti.Repository.RolUsuarioRepository;
 import com.pruebas.liti.dto.UserDto;
 import com.pruebas.liti.entity.RolUsuarioEntity;
 import com.pruebas.liti.entity.UserEntityProof;
@@ -28,6 +27,9 @@ public class PrincipalHandler {
     private IUserProofRepository userRepository;
 
     @Autowired
+    private RolUsuarioRepository rolUsuarioRepository;
+
+    @Autowired
     public BCryptPasswordEncoder passwordEncoder;
 
     private Mono<ServerResponse> response406 = ServerResponse.status(HttpStatus.NOT_ACCEPTABLE).build();
@@ -39,25 +41,35 @@ public class PrincipalHandler {
     }
 
     public Mono<ServerResponse> guardarUsuario(ServerRequest serverRequest){
-        Mono<UserDto> usuarioDto= serverRequest.bodyToMono(UserDto.class);
-
-        return usuarioDto.flatMap(usuariod -> {
-            if (!isValidEmail(usuariod.getEmail())) {
+        Mono<UserDto> userDto = serverRequest.bodyToMono(UserDto.class);
+    
+        return userDto.flatMap(usuarioDto -> {
+            if (!isValidEmail(usuarioDto.getEmail())) {
                 return ServerResponse.badRequest().bodyValue("El email es inválido");
             }
-            String encryptedPassword = encryptPassword(usuariod.getPassword());
-            Mono<ServerResponse> role = rolRepository.findById(usuariod.getRole())
-                    .flatMap(rol ->{
-                        UserEntityProof user=new UserEntityProof(usuariod.getEmail(), encryptedPassword);
-                        user.setRoles(Collections.singletonList(new RolUsuarioEntity(rol.getId(), user.getId())));
-                        return userRepository.save(user)
-                                .flatMap(savedUser -> ServerResponse.accepted().build())
-                                .switchIfEmpty(response406);
-                    });
-            return role.switchIfEmpty(ServerResponse.status(HttpStatus.BAD_REQUEST).build());
+    
+            String encryptedPassword = encryptPassword(usuarioDto.getPassword());
+    
+            // Guardar el objeto UserEntityProof sin la relación con el rol
+            UserEntityProof user = new UserEntityProof(usuarioDto.getEmail(), encryptedPassword);
+    
+            Mono<UserEntityProof> savedUserMono = userRepository.save(user);
+    
+            // Guardar la relación entre el usuario y el rol en la tabla intermedia
+            Mono<RolUsuarioEntity> savedRolUsuarioMono = savedUserMono
+                .flatMap(savedUser -> rolRepository.findById(usuarioDto.getRole())
+                .flatMap(rol -> {
+                    RolUsuarioEntity rolUsuarioEntity = new RolUsuarioEntity(rol.getId(), savedUser.getId());
+                    return rolUsuarioRepository.save(rolUsuarioEntity);
+                }));
+    
+            // Combinar los resultados y retornar una respuesta HTTP
+            return savedRolUsuarioMono
+                .flatMap(savedRolUsuario -> ServerResponse.accepted().build())
+                .switchIfEmpty(ServerResponse.status(HttpStatus.BAD_REQUEST).build());
         });
-            
     }
+    
 
     private boolean isValidEmail(String email) {
         String patron = "^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$";
