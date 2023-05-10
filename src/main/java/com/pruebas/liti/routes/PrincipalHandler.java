@@ -47,7 +47,14 @@ public class PrincipalHandler {
             if (!isValidEmail(usuarioDto.getEmail())) {
                 return ServerResponse.badRequest().bodyValue("El email es inválido");
             }
+
+            Mono<Boolean> existsByEmailMono = existsByEmail(usuarioDto.getEmail());
     
+            return existsByEmailMono.flatMap(exists -> {
+            if (exists) {
+                return ServerResponse.badRequest().bodyValue("El correo ya está en uso");
+            }
+
             String encryptedPassword = encryptPassword(usuarioDto.getPassword());
     
             // Guardar el objeto UserEntityProof sin la relación con el rol
@@ -67,6 +74,7 @@ public class PrincipalHandler {
             return savedRolUsuarioMono
                 .flatMap(savedRolUsuario -> ServerResponse.accepted().build())
                 .switchIfEmpty(ServerResponse.status(HttpStatus.BAD_REQUEST).build());
+            });
         });
     }
 
@@ -92,4 +100,11 @@ public class PrincipalHandler {
         password = passwordEncoder.encode(password);
         return password;
     }
+
+    public Mono<Boolean> existsByEmail(String email) {
+        return userRepository.countByEmail(email)
+                .map(count -> count > 0)
+                .defaultIfEmpty(false);
+    }
+    
 }
