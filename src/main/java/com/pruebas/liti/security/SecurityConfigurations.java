@@ -34,16 +34,21 @@ public class SecurityConfigurations {
     
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        return http
+         http
             .authorizeExchange()
                 .pathMatchers("/admin/**").hasRole("ADMIN")
-                .anyExchange().permitAll()
+                .pathMatchers("/guardar").permitAll()
+                .anyExchange().authenticated()
                 .and()
             .httpBasic()
                 .and()
-            .formLogin()
-                .and()
-            .csrf().disable()
-            .build();
+            .formLogin(login -> login
+                .loginPage("/login")
+                )
+            .logout(logout -> logout
+                .logoutUrl("/logout"))
+            .csrf().disable();
+
+        return http.build();
     }
 }

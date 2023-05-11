@@ -1,19 +1,28 @@
 package com.pruebas.liti.routes;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import com.pruebas.liti.ExceptionsAndResponses.AuthResponse;
 import com.pruebas.liti.Repository.IRolProofRepository;
 import com.pruebas.liti.Repository.IUserProofRepository;
 import com.pruebas.liti.Repository.RolUsuarioRepository;
 import com.pruebas.liti.dto.UserDto;
+import com.pruebas.liti.dto.UserLoginDto;
 import com.pruebas.liti.entity.RolUsuarioEntity;
 import com.pruebas.liti.entity.UserEntityProof;
+import com.pruebas.liti.services.JwtUtil;
+import com.pruebas.liti.services.UserServices;
 
 import reactor.core.publisher.Mono;
 
@@ -30,9 +39,19 @@ public class PrincipalHandler {
     private RolUsuarioRepository rolUsuarioRepository;
 
     @Autowired
+    private UserServices userServices;
+
+    @Autowired
     public BCryptPasswordEncoder passwordEncoder;
 
+    @Autowired
+    public ReactiveAuthenticationManager authenticationManager;
+
+    @Autowired
+    public JwtUtil jwtUtil;
+
     private Mono<ServerResponse> response406 = ServerResponse.status(HttpStatus.NOT_ACCEPTABLE).build();
+    private Mono<ServerResponse> response401 = ServerResponse.status(HttpStatus.UNAUTHORIZED).build();
 
     public Mono<ServerResponse> listarUsuario(ServerRequest serverRequest){
         return ServerResponse.ok()
@@ -79,7 +98,30 @@ public class PrincipalHandler {
     }
 
     public Mono<ServerResponse> iniciarSesión(ServerRequest serverRequest){
-        return ServerResponse.ok().build();
+        Mono<UserLoginDto> loginRequest = serverRequest.bodyToMono(UserLoginDto.class);
+
+
+        return loginRequest
+            .flatMap(form -> {
+                return userServices.findByUsername(form.getEmail())
+                    .flatMap(userDetails -> {
+                        if(passwordEncoder.matches(form.getPassword(), userDetails.getPassword())){
+                            UsernamePasswordAuthenticationToken authenticationToken=
+                                new UsernamePasswordAuthenticationToken(userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities());
+                            return authenticationManager.authenticate(authenticationToken)
+                                .flatMap(authentication -> {
+                                    SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                                    String authJwt=userDetails.getUsername();
+                                    String token=jwtUtil.generateToken(authJwt).block();
+                                    securityContext.setAuthentication(authentication);
+                                    return ServerResponse.ok().header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                                    .bodyValue(new AuthResponse(true,token, "Login successful"));
+                                });
+                        }else{
+                            return response401;
+                        }
+                    }).switchIfEmpty(response401);
+            });
     }
     
 
