@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
@@ -53,6 +54,35 @@ public class PrincipalHandler {
     private Mono<ServerResponse> response406 = ServerResponse.status(HttpStatus.NOT_ACCEPTABLE).build();
     private Mono<ServerResponse> response401 = ServerResponse.status(HttpStatus.UNAUTHORIZED).build();
 
+    public Mono<ServerResponse> iniciarSesión(ServerRequest serverRequest){
+        Mono<UserLoginDto> loginRequest = serverRequest.bodyToMono(UserLoginDto.class);
+
+
+        return loginRequest
+            .flatMap(form -> {
+                return userServices.findByUsername(form.getEmail())
+                    .flatMap(userDetails -> {
+                        if(passwordEncoder.matches(form.getPassword(), userDetails.getPassword())){
+                            UsernamePasswordAuthenticationToken authenticationToken=
+                                new UsernamePasswordAuthenticationToken(userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities());
+                            return authenticationManager.authenticate(authenticationToken)
+                                .flatMap(authentication -> {
+                                    SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                                    String authJwt=userDetails.getUsername();
+                                    String token=jwtUtil.generateToken(authJwt).block();
+                                    securityContext.setAuthentication(authentication);
+                                    return ServerResponse.ok().header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                                    .bodyValue(new AuthResponse(true,token, "Login successful"));
+                                }).onErrorResume(BadCredentialsException.class, e -> {
+                                    return ServerResponse.badRequest().bodyValue("Invalid username or password");
+                                });
+                        }else{
+                            return response401;
+                        }
+                    }).switchIfEmpty(response401);
+            });
+    }
+    
     public Mono<ServerResponse> listarUsuario(ServerRequest serverRequest){
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -97,32 +127,7 @@ public class PrincipalHandler {
         });
     }
 
-    public Mono<ServerResponse> iniciarSesión(ServerRequest serverRequest){
-        Mono<UserLoginDto> loginRequest = serverRequest.bodyToMono(UserLoginDto.class);
-
-
-        return loginRequest
-            .flatMap(form -> {
-                return userServices.findByUsername(form.getEmail())
-                    .flatMap(userDetails -> {
-                        if(passwordEncoder.matches(form.getPassword(), userDetails.getPassword())){
-                            UsernamePasswordAuthenticationToken authenticationToken=
-                                new UsernamePasswordAuthenticationToken(userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities());
-                            return authenticationManager.authenticate(authenticationToken)
-                                .flatMap(authentication -> {
-                                    SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                                    String authJwt=userDetails.getUsername();
-                                    String token=jwtUtil.generateToken(authJwt).block();
-                                    securityContext.setAuthentication(authentication);
-                                    return ServerResponse.ok().header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                                    .bodyValue(new AuthResponse(true,token, "Login successful"));
-                                });
-                        }else{
-                            return response401;
-                        }
-                    }).switchIfEmpty(response401);
-            });
-    }
+    
     
 
     private boolean isValidEmail(String email) {

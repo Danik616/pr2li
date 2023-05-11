@@ -26,8 +26,8 @@ public class SecurityConfigurations {
 
     @Bean
     public ReactiveAuthenticationManager reactiveAuthenticationManager() {
-        UserDetailsRepositoryReactiveAuthenticationManager authenticationManager = new UserDetailsRepositoryReactiveAuthenticationManager(
-                userServices);
+        UserDetailsRepositoryReactiveAuthenticationManager authenticationManager = 
+               new UserDetailsRepositoryReactiveAuthenticationManager(userServices);
         authenticationManager.setPasswordEncoder(bCryptPasswordEncoder());
         return authenticationManager;
     }
@@ -37,14 +37,11 @@ public class SecurityConfigurations {
          http
             .authorizeExchange()
                 .pathMatchers("/admin/**").hasRole("ADMIN")
-                .pathMatchers("/guardar").permitAll()
+                .pathMatchers("/login").permitAll()
                 .anyExchange().authenticated()
                 .and()
-            .httpBasic()
-                .and()
-            .formLogin(login -> login
-                .loginPage("/login")
-                )
+            .httpBasic().disable()
+            .formLogin().disable()
             .logout(logout -> logout
                 .logoutUrl("/logout"))
             .csrf().disable();
