@@ -8,7 +8,6 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.context.ServerSecurityContextRepository;
 import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
 
 //import com.pruebas.liti.services.UserServices;
@@ -27,19 +26,6 @@ public class SecurityConfigurations {
 
 
     
-
-    @Bean
-    public ServerSecurityContextRepository securityContextRepository() {
-        WebSessionServerSecurityContextRepository securityContextRepository =
-                new WebSessionServerSecurityContextRepository();
-
-        securityContextRepository.setSpringSecurityContextAttrName("langdope-security-context");
-
-        return securityContextRepository;
-    }
-
-
-    
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
          http
@@ -53,7 +39,7 @@ public class SecurityConfigurations {
             .logout(logout -> logout
                 .logoutUrl("/logout"))
             .csrf().disable().cors().disable()
-            .securityContextRepository(securityContextRepository());
+            .securityContextRepository(new WebSessionServerSecurityContextRepository());
 
         return http.build();
     }
