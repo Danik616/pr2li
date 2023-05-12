@@ -25,13 +25,13 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private Long expiration;
 
-    private final ReactiveUserDetailsService userDetailsService;
+    private final UserServices userDetailsService;
 
     private SecretKey generateKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public JwtUtil(ReactiveUserDetailsService userDetailsService) {
+    public JwtUtil(UserServices userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
 
