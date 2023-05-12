@@ -17,8 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.pruebas.liti.entity.UserEntityProof;
-import com.pruebas.liti.security.AuthenticationManager;
 import com.pruebas.liti.services.UserServices;
 
 import reactor.core.publisher.Mono;
@@ -40,8 +38,6 @@ public class SecurityTest {
     @Mock
     private BCryptPasswordEncoder passwordEncode1;
 
-    @InjectMocks
-    private AuthenticationManager authenticationManager;
 
     @Test
     @WithMockUser(username = "example@example.com", password = "Test1234")
@@ -89,26 +85,6 @@ void testAboutAuthenticateUDRepository() {
             .verify();
 }
 
-@Test
-public void testAboutAuthenticateAM() {
-    // Crea un usuario de prueba en la base de datos
-    UserEntityProof userEntity = new UserEntityProof();
-    userEntity.setEmail("example@example.com");
-    userEntity.setPassword(passwordEncoder.encode("Test1234"));
-
-    // Crea un objeto UsernamePasswordAuthenticationToken con las credenciales del usuario
-    UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken("example@example.com", "Test1234");
-    // Crea una instancia de AuthenticationManager
-    AuthenticationManager authManager = new AuthenticationManager();
-    authManager.userService=userService;
-    authManager.passwordEncoder = passwordEncoder;
-
-    // Llama al método authenticate() y verifica que el resultado sea un objeto Authentication válido
-    StepVerifier.create(authManager.authenticate(token))
-        .expectNextMatches(auth -> auth.isAuthenticated() && auth.getPrincipal().equals("testuser@example.com"))
-        .verifyComplete();
-
-}
 
 @Test
 public void testRepository(){

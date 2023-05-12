@@ -1,10 +1,9 @@
 package com.pruebas.liti.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.ReactiveAuthenticationManager;
-import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
+
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -12,14 +11,14 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.ServerSecurityContextRepository;
 import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
 
-import com.pruebas.liti.services.UserServices;
+//import com.pruebas.liti.services.UserServices;
 
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfigurations {
 
-    @Autowired
-    private UserServices userServices;
+    // @Autowired
+    // private UserServices userServices;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -27,14 +26,7 @@ public class SecurityConfigurations {
     }
 
 
-    @Bean
-    public ReactiveAuthenticationManager reactiveAuthenticationManager() {
-        UserDetailsRepositoryReactiveAuthenticationManager authenticationManager = 
-               new UserDetailsRepositoryReactiveAuthenticationManager(userServices);
-               
-        authenticationManager.setPasswordEncoder(passwordEncoder());
-        return authenticationManager;
-    }
+    
 
     @Bean
     public ServerSecurityContextRepository securityContextRepository() {
@@ -61,7 +53,6 @@ public class SecurityConfigurations {
             .logout(logout -> logout
                 .logoutUrl("/logout"))
             .csrf().disable().cors().disable()
-            .authenticationManager(reactiveAuthenticationManager())
             .securityContextRepository(securityContextRepository());
 
         return http.build();

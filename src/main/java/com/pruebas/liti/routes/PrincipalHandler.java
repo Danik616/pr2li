@@ -20,7 +20,6 @@ import com.pruebas.liti.dto.UserDto;
 import com.pruebas.liti.dto.UserLoginDto;
 import com.pruebas.liti.entity.RolUsuarioEntity;
 import com.pruebas.liti.entity.UserEntityProof;
-import com.pruebas.liti.security.AuthenticationManager;
 import com.pruebas.liti.services.JwtUtil;
 import com.pruebas.liti.services.UserServices;
 
@@ -45,12 +44,9 @@ public class PrincipalHandler {
     public BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    public AuthenticationManager authenticationManager;
-
-    @Autowired
     public JwtUtil jwtUtil;
 
-    private Mono<ServerResponse> response406 = ServerResponse.status(HttpStatus.NOT_ACCEPTABLE).build();
+    // private Mono<ServerResponse> response406 = ServerResponse.status(HttpStatus.NOT_ACCEPTABLE).build();
     private Mono<ServerResponse> response401 = ServerResponse.status(HttpStatus.UNAUTHORIZED).build();
 
     public Mono<ServerResponse> iniciarSesión(ServerRequest serverRequest){
@@ -62,20 +58,18 @@ public class PrincipalHandler {
                 return userServices.findByUsername(form.getEmail())
                     .flatMap(userDetails -> {
                         if(passwordEncoder.matches(form.getPassword(), userDetails.getPassword())){
-                            UsernamePasswordAuthenticationToken authenticationToken=
+                            UsernamePasswordAuthenticationToken authentication=
                                 new UsernamePasswordAuthenticationToken(userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities());
-                            return authenticationManager.authenticate(authenticationToken)
-                                .flatMap(authentication -> {
-                                    // SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                                    // String authJwt=userDetails.getUsername();
-                                    // String token=jwtUtil.generateToken(authJwt).block();
-                                    // securityContext.setAuthentication(authentication);
-                                    // return ServerResponse.ok().header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                                    // .bodyValue(new AuthResponse(true,token, "Login successful"));
-                                    return ServerResponse.ok().bodyValue("Login successful");
-                                }).switchIfEmpty(response401);
+                                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                                    String authJwt=userDetails.getUsername();
+                                    return jwtUtil.generateToken(authJwt).flatMap(token -> {
+                                        securityContext.setAuthentication(authentication);
+                                        return ServerResponse.ok()
+                                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                                            .bodyValue(new AuthResponse(true,token, "Login successful"));
+                                    });
                         }else{
-                            return response401;
+                            return response401; 
                         }
                     }).switchIfEmpty(response401);
             });
