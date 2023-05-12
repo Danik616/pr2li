@@ -4,8 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +20,7 @@ import com.pruebas.liti.dto.UserDto;
 import com.pruebas.liti.dto.UserLoginDto;
 import com.pruebas.liti.entity.RolUsuarioEntity;
 import com.pruebas.liti.entity.UserEntityProof;
+import com.pruebas.liti.security.AuthenticationManager;
 import com.pruebas.liti.services.JwtUtil;
 import com.pruebas.liti.services.UserServices;
 
@@ -46,7 +45,7 @@ public class PrincipalHandler {
     public BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    public ReactiveAuthenticationManager authenticationManager;
+    public AuthenticationManager authenticationManager;
 
     @Autowired
     public JwtUtil jwtUtil;
@@ -67,15 +66,14 @@ public class PrincipalHandler {
                                 new UsernamePasswordAuthenticationToken(userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities());
                             return authenticationManager.authenticate(authenticationToken)
                                 .flatMap(authentication -> {
-                                    SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                                    String authJwt=userDetails.getUsername();
-                                    String token=jwtUtil.generateToken(authJwt).block();
-                                    securityContext.setAuthentication(authentication);
-                                    return ServerResponse.ok().header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                                    .bodyValue(new AuthResponse(true,token, "Login successful"));
-                                }).onErrorResume(BadCredentialsException.class, e -> {
-                                    return ServerResponse.badRequest().bodyValue("Invalid username or password");
-                                });
+                                    // SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                                    // String authJwt=userDetails.getUsername();
+                                    // String token=jwtUtil.generateToken(authJwt).block();
+                                    // securityContext.setAuthentication(authentication);
+                                    // return ServerResponse.ok().header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                                    // .bodyValue(new AuthResponse(true,token, "Login successful"));
+                                    return ServerResponse.ok().bodyValue("Login successful");
+                                }).switchIfEmpty(response401);
                         }else{
                             return response401;
                         }

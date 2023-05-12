@@ -9,6 +9,8 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.context.ServerSecurityContextRepository;
+import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
 
 import com.pruebas.liti.services.UserServices;
 
@@ -20,17 +22,31 @@ public class SecurityConfigurations {
     private UserServices userServices;
 
     @Bean
-    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+    public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 
     @Bean
     public ReactiveAuthenticationManager reactiveAuthenticationManager() {
         UserDetailsRepositoryReactiveAuthenticationManager authenticationManager = 
                new UserDetailsRepositoryReactiveAuthenticationManager(userServices);
-        authenticationManager.setPasswordEncoder(bCryptPasswordEncoder());
+               
+        authenticationManager.setPasswordEncoder(passwordEncoder());
         return authenticationManager;
     }
+
+    @Bean
+    public ServerSecurityContextRepository securityContextRepository() {
+        WebSessionServerSecurityContextRepository securityContextRepository =
+                new WebSessionServerSecurityContextRepository();
+
+        securityContextRepository.setSpringSecurityContextAttrName("langdope-security-context");
+
+        return securityContextRepository;
+    }
+
+
     
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
@@ -44,7 +60,9 @@ public class SecurityConfigurations {
             .formLogin().disable()
             .logout(logout -> logout
                 .logoutUrl("/logout"))
-            .csrf().disable();
+            .csrf().disable().cors().disable()
+            .authenticationManager(reactiveAuthenticationManager())
+            .securityContextRepository(securityContextRepository());
 
         return http.build();
     }

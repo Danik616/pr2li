@@ -72,11 +72,16 @@ public class JwtUtil {
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         return Jwts.parserBuilder().setSigningKey(generateKey()).build().parseClaimsJws(token).getBody();
     }
 
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
+    }
+
+
+    public String getUsernameFromToken(String token) {
+        return extractAllClaims(token).getSubject();
     }
 }
