@@ -7,7 +7,8 @@ import io.jsonwebtoken.security.Keys;
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -26,6 +27,13 @@ public class JwtUtil {
     private Long expiration;
 
     private final UserServices userDetailsService;
+
+    public Mono<Authentication> getAuthentication(String token) {
+        Claims claims = extractAllClaims(token);
+        return userDetailsService.findByUsername(claims.getSubject())
+                .map(userDetails -> new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
+                
+    }
 
     private SecretKey generateKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
@@ -56,7 +64,10 @@ public class JwtUtil {
     public Mono<Boolean> validateToken(String token) {
         String username = extractUsername(token);
         return userDetailsService.findByUsername(username)
-                .flatMap(userDetails -> Mono.just(username.equals(userDetails.getUsername()) && !isTokenExpired(token)));
+            .flatMap(userDetails -> {
+                boolean isTokenValid = username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+                return Mono.just(isTokenValid);
+            });
     }
 
     public String extractUsername(String token) {

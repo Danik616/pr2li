@@ -18,7 +18,7 @@ import com.pruebas.liti.Repository.RolUsuarioRepository;
 import com.pruebas.liti.entity.RolEntityProof;
 
 
-import reactor.core.publisher.Flux;
+
 import reactor.core.publisher.Mono;
 @Service
 public class UserServices implements IUserServices{
@@ -34,23 +34,28 @@ public class UserServices implements IUserServices{
 
     @Override
     public Mono<UserDetails> findByUsername(String email) {
-        
         return userRepository.findByEmail(email).flatMap( account -> {
-            Flux<RolEntityProof> userBuilderMono = 
-                rolUsuarioRepository.findByUserId(account.getId())
-                    .flatMap(rolUsuario -> rolRepository.findById(rolUsuario.getRolId()));
-                    return userBuilderMono.collectList().map(roles -> {
+            Mono<List<RolEntityProof>> rolesMono = 
+                        rolUsuarioRepository.findByUserId(account.getId())
+                            .flatMap(rolUsuario -> rolRepository.findById(rolUsuario.getRolId()))
+                            .collectList();
+                            
+                    return rolesMono.zipWith(Mono.just(account), (roles, acc) -> {
                         List<GrantedAuthority> authorities = roles.stream()
-                                .map(rol -> new SimpleGrantedAuthority(rol.getNombre()))
-                                .collect(Collectors.toList());
+                            .map(rol -> new SimpleGrantedAuthority(rol.getNombre()))
+                            .collect(Collectors.toList());
                         
                         return User.builder()
-                                .username(account.getEmail())
-                                .password(account.getPassword())
-                                .authorities(authorities)
-                                .build();
+                            .username(acc.getEmail())
+                            .password(acc.getPassword())
+                            .authorities(authorities)
+                            .build();
                     });
-        }).switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found with email: " + email)));
+        }).switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found with email: " + email)))
+        .onErrorResume(Exception.class, e -> {
+            System.out.println("Error");
+            return Mono.error(new UsernameNotFoundException("User not found with email: " + email));
+        });
     }
     
 }
