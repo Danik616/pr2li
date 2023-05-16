@@ -9,11 +9,10 @@ import reactor.core.publisher.Mono;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 import javax.crypto.SecretKey;
@@ -45,16 +44,16 @@ public class JwtUtil {
 
     public Mono<String> generateToken(String username) {
         return userDetailsService.findByUsername(username)
-                .flatMap(userDetails -> Mono.just(createToken(new HashMap<>(), userDetails.getUsername())));
+                .flatMap(userDetails -> Mono.just(createToken(userDetails)));
     }
 
-    private String createToken(Map<String, Object> claims, String subject) {
+    private String createToken(UserDetails userDetails) {
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + expiration * 1000);
 
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
+                .claim("roles", userDetails.getAuthorities())
+                .setSubject(userDetails.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(expirationDate)
                 .signWith(generateKey(), SignatureAlgorithm.HS256)
@@ -94,5 +93,9 @@ public class JwtUtil {
 
     public String getUsernameFromToken(String token) {
         return extractAllClaims(token).getSubject();
+    }
+
+    public Claims getClaims(String token) {
+        return Jwts.parserBuilder().setSigningKey(generateKey()).build().parseClaimsJws(token).getBody();
     }
 }

@@ -1,6 +1,6 @@
 package com.pruebas.liti.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -8,17 +8,17 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
+import com.pruebas.liti.security.jwt.JwtFilter;
+import com.pruebas.liti.security.repository.SecurityContextRepository;
 
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfigurations {
 
-    @Autowired
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final SecurityContextRepository securityContextRepository;
 
-    public SecurityConfigurations(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    public SecurityConfigurations(SecurityContextRepository securityContextRepository) {
+        this.securityContextRepository = securityContextRepository;
     }
 
     @Bean
@@ -27,7 +27,12 @@ public class SecurityConfigurations {
     }
 
     @Bean
-    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+    public WebProperties.Resources resources() {
+        return new WebProperties.Resources();
+    }
+
+    @Bean
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, JwtFilter jwtFilter) {
         http
                 .authorizeExchange()
                 .pathMatchers("/admin/**").hasRole("ADMIN")
@@ -36,11 +41,11 @@ public class SecurityConfigurations {
                 .and()
                 .httpBasic().disable()
                 .formLogin().disable()
+                .addFilterAfter(jwtFilter, SecurityWebFiltersOrder.FIRST)
+                .securityContextRepository(securityContextRepository)
                 .logout(logout -> logout
                         .logoutUrl("/logout"))
-                .csrf().disable().cors().disable()
-                .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
-                .securityContextRepository(new WebSessionServerSecurityContextRepository());
+                .csrf().disable().cors().disable();
 
         return http.build();
     }
