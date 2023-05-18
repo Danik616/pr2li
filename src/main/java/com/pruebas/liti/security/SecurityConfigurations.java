@@ -36,7 +36,7 @@ public class SecurityConfigurations {
         http
                 .authorizeExchange()
                 .pathMatchers("/admin/**").hasRole("ADMIN")
-                .pathMatchers("/listar").permitAll()
+                .pathMatchers("/login").permitAll()
                 .anyExchange().authenticated()
                 .and()
                 .httpBasic().disable()
@@ -45,7 +45,10 @@ public class SecurityConfigurations {
                 .securityContextRepository(securityContextRepository)
                 .logout(logout -> logout
                         .logoutUrl("/logout"))
-                .csrf().disable().cors().disable();
+                .csrf().disable()
+                .headers().frameOptions().disable()
+                .and()
+                .cors();
 
         return http.build();
     }

@@ -72,7 +72,7 @@ public class PrincipalHandler {
                             return response401; 
                         }
                     }).switchIfEmpty(response401);
-            });
+            }).onErrorResume(Exception.class , e -> response401);
     }
     
     public Mono<ServerResponse> listarUsuario(ServerRequest serverRequest){
