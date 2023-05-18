@@ -1,7 +1,6 @@
 package com.pruebas.liti.routes;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,6 +19,7 @@ import com.pruebas.liti.dto.UserDto;
 import com.pruebas.liti.dto.UserLoginDto;
 import com.pruebas.liti.entity.RolUsuarioEntity;
 import com.pruebas.liti.entity.UserEntityProof;
+import com.pruebas.liti.security.jwt.JwtRepository;
 import com.pruebas.liti.services.JwtUtil;
 import com.pruebas.liti.services.UserServices;
 
@@ -46,6 +46,13 @@ public class PrincipalHandler {
     @Autowired
     public JwtUtil jwtUtil;
 
+    @Autowired
+    private final JwtRepository jwt;
+
+    public PrincipalHandler(JwtRepository jwt) {
+        this.jwt = jwt;
+    }
+
     // private Mono<ServerResponse> response406 = ServerResponse.status(HttpStatus.NOT_ACCEPTABLE).build();
     private Mono<ServerResponse> response401 = ServerResponse.status(HttpStatus.UNAUTHORIZED).build();
 
@@ -64,15 +71,16 @@ public class PrincipalHandler {
                                     String authJwt=userDetails.getUsername();
                                     return jwtUtil.generateToken(authJwt).flatMap(token -> {
                                         securityContext.setAuthentication(authentication);
+                                        jwt.setJwt(token);
                                         return ServerResponse.ok()
-                                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                                             .bodyValue(new AuthResponse(true,token, "Login successful"));
                                     });
                         }else{
                             return response401; 
                         }
                     }).switchIfEmpty(response401);
-            }).onErrorResume(Exception.class , e -> response401);
+            }).onErrorResume(Exception.class , e -> response401)
+            .switchIfEmpty(response401);
     }
     
     public Mono<ServerResponse> listarUsuario(ServerRequest serverRequest){
