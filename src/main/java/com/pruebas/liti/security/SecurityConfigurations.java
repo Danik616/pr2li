@@ -36,7 +36,7 @@ public class SecurityConfigurations {
         http
                 .authorizeExchange()
                 .pathMatchers("/admin/**").hasRole("ADMIN")
-                .pathMatchers("/login").permitAll()
+                .pathMatchers("/listar").permitAll()
                 .anyExchange().authenticated()
                 .and()
                 .httpBasic().disable()
