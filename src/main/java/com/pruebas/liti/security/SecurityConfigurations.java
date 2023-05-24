@@ -36,13 +36,13 @@ public class SecurityConfigurations {
         http
                 .authorizeExchange()
                 .pathMatchers("/admin/**").hasRole("ADMIN")
-                .pathMatchers("/**").permitAll()
-                //.anyExchange().authenticated()
+                .pathMatchers("/login").permitAll()
+                .anyExchange().authenticated()
                 .and()
                 .httpBasic().disable()
                 .formLogin().disable()
-                //.addFilterAfter(jwtFilter, SecurityWebFiltersOrder.FIRST)
-                //.securityContextRepository(securityContextRepository)
+                .addFilterAfter(jwtFilter, SecurityWebFiltersOrder.FIRST)
+                .securityContextRepository(securityContextRepository)
                 .logout(logout -> logout
                         .logoutUrl("/logout"))
                 .csrf().disable()
