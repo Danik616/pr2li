@@ -122,7 +122,7 @@ public class PrincipalHandler {
             // Combinar los resultados y retornar una respuesta HTTP
             return savedRolUsuarioMono
                 .flatMap(savedRolUsuario -> ServerResponse.accepted().build())
-                .switchIfEmpty(ServerResponse.status(HttpStatus.BAD_REQUEST).build());
+                .onErrorResume(Exception.class, (e) -> ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue("Se guardo el usuario, pero hay un error en el hilo"));
             });
         });
     }
