@@ -36,7 +36,6 @@ public class UserServices implements IUserServices{
     public Mono<UserDetails> findByUsername(String email) {
         String correo = email.trim();
         return userRepository.findByEmail(correo).flatMap( account -> {
-            System.out.println(account);
             Mono<List<RolEntityProof>> rolesMono = 
                         rolUsuarioRepository.findByUserId(account.getId())
                             .flatMap(rolUsuario -> rolRepository.findById(rolUsuario.getRolId()))

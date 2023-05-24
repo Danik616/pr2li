@@ -93,11 +93,11 @@ public class PrincipalHandler {
         Mono<UserDto> userDto = serverRequest.bodyToMono(UserDto.class);
     
         return userDto.flatMap(usuarioDto -> {
-            if (!isValidEmail(usuarioDto.getEmail())) {
+            if (!isValidEmail(usuarioDto.getEmail().trim())) {
                 return ServerResponse.badRequest().bodyValue("El email es inválido");
             }
 
-            Mono<Boolean> existsByEmailMono = existsByEmail(usuarioDto.getEmail());
+            Mono<Boolean> existsByEmailMono = existsByEmail(usuarioDto.getEmail().trim());
     
             return existsByEmailMono.flatMap(exists -> {
             if (exists) {
@@ -107,7 +107,7 @@ public class PrincipalHandler {
             String encryptedPassword = encryptPassword(usuarioDto.getPassword());
     
             // Guardar el objeto UserEntityProof sin la relación con el rol
-            UserEntityProof user = new UserEntityProof(usuarioDto.getEmail(), encryptedPassword);
+            UserEntityProof user = new UserEntityProof(usuarioDto.getEmail().trim(), encryptedPassword);
     
             Mono<UserEntityProof> savedUserMono = userRepository.save(user);
     
