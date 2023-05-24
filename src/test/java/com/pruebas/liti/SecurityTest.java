@@ -16,6 +16,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.pruebas.liti.Repository.IUserProofRepository;
+import com.pruebas.liti.entity.UserEntityProof;
 import com.pruebas.liti.services.UserServices;
 
 import reactor.core.publisher.Mono;
@@ -37,17 +39,19 @@ public class SecurityTest {
     @Mock
     private BCryptPasswordEncoder passwordEncode1;
 
+    @Autowired
+    IUserProofRepository repository;
 
     @Test
-    @WithMockUser(username = "example@example.com", password = "Test1234")
+    @WithMockUser(username = "prueba3@gmail.com", password = "Test12345")
     public void testAuthenticate() {
 
 
         // Call the authentication manager and expect a successful authentication
-        Mono<UserDetails> userDetailsMono = userDetailsService.findByUsername("example@example.com");
+        Mono<UserDetails> userDetailsMono = userDetailsService.findByUsername("prueba3@gmail.com");
         StepVerifier.create(userDetailsMono)
                 .assertNext(userDetails -> {
-                    boolean matches = passwordEncoder.matches("Test1234", userDetails.getPassword());
+                    boolean matches = passwordEncoder.matches("Test12345", userDetails.getPassword());
                     assert matches : "Password does not match";
                 })
                 .expectComplete()
@@ -60,8 +64,8 @@ public class SecurityTest {
     @Test
 void testAboutAuthenticateUDRepository() {
     // Crea un usuario ficticio con credenciales válidas
-    String email = "example@example.com";
-    String password = "Test1234";
+    String email = "prueba3@gmail.com";
+    String password = "Test12345";
     UserDetails user = User.builder()
             .username(email)
             .password(passwordEncoder.encode(password))
@@ -87,14 +91,29 @@ void testAboutAuthenticateUDRepository() {
 
 @Test
 public void testRepository(){
-    String email= "example@example.com";
+    String email= "prueba3@gmail.com";
 
-    Mono<UserDetails> userDetailsMono = userDetailsService.findByUsername(email);
+    Mono<UserDetails> userDetailsMono = userService.findByUsername(email);
 
     StepVerifier.create(userDetailsMono)
                 .assertNext(userDetails -> {
                     boolean matches = userDetails.getUsername().equals(email);
-                    assert matches : "Password does not match";
+                    assert matches : "email does not match";
+                })
+                .expectComplete()
+                .verify();
+}
+
+@Test
+public void test1(){
+    String email= "prueba3@gmail.com";
+    
+
+    Mono<UserEntityProof> pruebaMono = repository.findByEmail(email);
+    StepVerifier.create(pruebaMono)
+                .assertNext(user -> {
+                    boolean matches = user.getEmail().equals(email);
+                    assert matches : "email does not match";
                 })
                 .expectComplete()
                 .verify();

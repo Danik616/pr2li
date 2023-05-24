@@ -79,7 +79,7 @@ public class PrincipalHandler {
                             return response401; 
                         }
                     }).switchIfEmpty(response401);
-            }).onErrorResume(Exception.class , e -> response401)
+            }).onErrorResume(Exception.class , e -> ServerResponse.status(444).bodyValue("Hay un error en el servidor"+e))
             .switchIfEmpty(response401);
     }
     
@@ -115,20 +115,20 @@ public class PrincipalHandler {
             Mono<RolUsuarioEntity> savedRolUsuarioMono = savedUserMono
                 .flatMap(savedUser -> rolRepository.findById(usuarioDto.getRole())
                 .flatMap(rol -> {
+                    System.out.println(rol.getId());
+                    System.out.println(savedUser.getId());
                     RolUsuarioEntity rolUsuarioEntity = new RolUsuarioEntity(rol.getId(), savedUser.getId());
+                    //rolUsuarioEntity.setId(2L);
                     return rolUsuarioRepository.save(rolUsuarioEntity);
                 }));
     
             // Combinar los resultados y retornar una respuesta HTTP
             return savedRolUsuarioMono
                 .flatMap(savedRolUsuario -> ServerResponse.accepted().build())
-                .onErrorResume(Exception.class, (e) -> ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue("Se guardo el usuario, pero hay un error en el hilo"));
+                .onErrorResume(Exception.class, (e) -> ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue("Se guardo el usuario, pero hay un error en el hilo"+e));
             });
         });
     }
-
-    
-    
 
     private boolean isValidEmail(String email) {
         String patron = "^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$";

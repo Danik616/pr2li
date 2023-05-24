@@ -34,7 +34,9 @@ public class UserServices implements IUserServices{
 
     @Override
     public Mono<UserDetails> findByUsername(String email) {
-        return userRepository.findByEmail(email).flatMap( account -> {
+        String correo = email.trim();
+        return userRepository.findByEmail(correo).flatMap( account -> {
+            System.out.println(account);
             Mono<List<RolEntityProof>> rolesMono = 
                         rolUsuarioRepository.findByUserId(account.getId())
                             .flatMap(rolUsuario -> rolRepository.findById(rolUsuario.getRolId()))
@@ -51,10 +53,10 @@ public class UserServices implements IUserServices{
                             .authorities(authorities)
                             .build();
                     });
-        }).switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found with email: " + email)))
-        .onErrorResume(Exception.class, e -> {
+        }).switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found with email: " + correo)))
+        .onErrorResume(NullPointerException.class, e -> {
             System.out.println("Error");
-            return Mono.error(new UsernameNotFoundException("User not found with email: " + email));
+            return Mono.error(new UsernameNotFoundException("Userntfound with email: " + email));
         });
     }
     
