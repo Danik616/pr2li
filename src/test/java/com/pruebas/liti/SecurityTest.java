@@ -91,13 +91,13 @@ void testAboutAuthenticateUDRepository() {
 
 @Test
 public void testRepository(){
-    String email= "prueba3@gmail.com";
+    String email= "Jhon_doe";
 
-    Mono<UserDetails> userDetailsMono = userService.findByUsername(email);
+    Mono<UserDetails> userDetailsMono = userService.findByUsername(email.toUpperCase());
 
     StepVerifier.create(userDetailsMono)
                 .assertNext(userDetails -> {
-                    boolean matches = userDetails.getUsername().equals(email);
+                    boolean matches = userDetails.getUsername().equals(email.toUpperCase());
                     assert matches : "email does not match";
                 })
                 .expectComplete()
@@ -106,13 +106,13 @@ public void testRepository(){
 
 @Test
 public void test1(){
-    String email= "prueba3@gmail.com";
+    String email= "Jhon_doe";
     
 
-    Mono<UserEntityProof> pruebaMono = repository.findByEmail(email);
+    Mono<UserEntityProof> pruebaMono = repository.findById(email.toUpperCase());
     StepVerifier.create(pruebaMono)
                 .assertNext(user -> {
-                    boolean matches = user.getEmail().equals(email);
+                    boolean matches = user.getUsuarioCorreo().equals(email.toUpperCase());
                     assert matches : "email does not match";
                 })
                 .expectComplete()

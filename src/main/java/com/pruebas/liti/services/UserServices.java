@@ -33,11 +33,11 @@ public class UserServices implements IUserServices{
     public RolUsuarioRepository rolUsuarioRepository;
 
     @Override
-    public Mono<UserDetails> findByUsername(String email) {
-        String correo = email.trim();
-        return userRepository.findByEmail(correo).flatMap( account -> {
+    public Mono<UserDetails> findByUsername(String username) {
+        String user = username.trim();
+        return userRepository.findById(user).flatMap( account -> {
             Mono<List<RolEntityProof>> rolesMono = 
-                        rolUsuarioRepository.findByUserId(account.getId())
+                        rolUsuarioRepository.findByUserId(account.getUsuarioId())
                             .flatMap(rolUsuario -> rolRepository.findById(rolUsuario.getRolId()))
                             .collectList();
                             
@@ -47,15 +47,15 @@ public class UserServices implements IUserServices{
                             .collect(Collectors.toList());
                         
                         return User.builder()
-                            .username(acc.getEmail())
-                            .password(acc.getPassword())
+                            .username(acc.getUsuarioId())
+                            .password(acc.getUsuarioClave())
                             .authorities(authorities)
                             .build();
                     });
-        }).switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found with email: " + correo)))
+        }).switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found with user: " + user)))
         .onErrorResume(NullPointerException.class, e -> {
             System.out.println("Error");
-            return Mono.error(new UsernameNotFoundException("Userntfound with email: " + email));
+            return Mono.error(new UsernameNotFoundException("Userntfound with user: " + user));
         });
     }
     

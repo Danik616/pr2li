@@ -1,6 +1,11 @@
 package com.pruebas.liti.routes;
 
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -8,8 +13,11 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.pruebas.liti.ExceptionsAndResponses.AuthResponse;
 import com.pruebas.liti.Repository.IRolProofRepository;
@@ -23,6 +31,7 @@ import com.pruebas.liti.security.jwt.JwtRepository;
 import com.pruebas.liti.services.JwtUtil;
 import com.pruebas.liti.services.UserServices;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -53,79 +62,115 @@ public class PrincipalHandler {
         this.jwt = jwt;
     }
 
-    // private Mono<ServerResponse> response406 = ServerResponse.status(HttpStatus.NOT_ACCEPTABLE).build();
+    // private Mono<ServerResponse> response406 =
+    // ServerResponse.status(HttpStatus.NOT_ACCEPTABLE).build();
     private Mono<ServerResponse> response401 = ServerResponse.status(HttpStatus.UNAUTHORIZED).build();
 
-    public Mono<ServerResponse> iniciarSesión(ServerRequest serverRequest){
+    public Mono<ServerResponse> iniciarSesión(ServerRequest serverRequest) {
         Mono<UserLoginDto> loginRequest = serverRequest.bodyToMono(UserLoginDto.class);
 
-
         return loginRequest
-            .flatMap(form -> {
-                return userServices.findByUsername(form.getEmail())
-                    .flatMap(userDetails -> {
-                        if(passwordEncoder.matches(form.getPassword(), userDetails.getPassword())){
-                            UsernamePasswordAuthenticationToken authentication=
-                                new UsernamePasswordAuthenticationToken(userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities());
-                                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                                    String authJwt=userDetails.getUsername();
+                .flatMap(form -> {
+                    return userServices.findByUsername(form.getUsername().toUpperCase())
+                            .flatMap(userDetails -> {
+                                if (passwordEncoder.matches(form.getPassword(), userDetails.getPassword())) {
+                                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                            userDetails.getUsername(), userDetails.getPassword(),
+                                            userDetails.getAuthorities());
+                                    SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                                    String authJwt = userDetails.getUsername();
                                     return jwtUtil.generateToken(authJwt).flatMap(token -> {
                                         securityContext.setAuthentication(authentication);
                                         jwt.setJwt(token);
                                         return ServerResponse.ok()
-                                            .bodyValue(new AuthResponse(true,token, "Login successful"));
+                                                .bodyValue(new AuthResponse(true, token, "Login successful"));
                                     });
-                        }else{
-                            return response401; 
-                        }
-                    }).switchIfEmpty(response401);
-            }).onErrorResume(Exception.class , e -> ServerResponse.status(444).bodyValue("Hay un error en el servidor"+e))
-            .switchIfEmpty(response401);
-    }
-    
-    public Mono<ServerResponse> listarUsuario(ServerRequest serverRequest){
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(userRepository.findAll(), UserEntityProof.class);
+                                } else {
+                                    return response401;
+                                }
+                            }).switchIfEmpty(response401);
+                })
+                .onErrorResume(Exception.class,
+                        e -> ServerResponse.status(444).bodyValue("Hay un error en el servidor" + e))
+                .switchIfEmpty(response401);
     }
 
-    public Mono<ServerResponse> guardarUsuario(ServerRequest serverRequest){
+    public Mono<ServerResponse> listarUsuario(ServerRequest serverRequest) {
+        Flux<UserEntityProof> userFlux = userRepository.findAll();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        Flux<DataBuffer> jsonFlux = userFlux.map(user -> {
+            try {
+                String json = objectMapper.writeValueAsString(user);
+                byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
+                DataBuffer buffer = DefaultDataBufferFactory.sharedInstance.wrap(jsonBytes);
+                return buffer;
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Error al convertir a JSON: " + e.getMessage());
+            }
+        });
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromDataBuffers(jsonFlux));
+    }
+
+    public Mono<ServerResponse> guardarUsuario(ServerRequest serverRequest) {
+
         Mono<UserDto> userDto = serverRequest.bodyToMono(UserDto.class);
-    
+
         return userDto.flatMap(usuarioDto -> {
             if (!isValidEmail(usuarioDto.getEmail().trim())) {
                 return ServerResponse.badRequest().bodyValue("El email es inválido");
             }
 
             Mono<Boolean> existsByEmailMono = existsByEmail(usuarioDto.getEmail().trim());
-    
-            return existsByEmailMono.flatMap(exists -> {
-            if (exists) {
-                return ServerResponse.badRequest().bodyValue("El correo ya está en uso");
-            }
 
-            String encryptedPassword = encryptPassword(usuarioDto.getPassword());
-    
-            // Guardar el objeto UserEntityProof sin la relación con el rol
-            UserEntityProof user = new UserEntityProof(usuarioDto.getEmail().trim(), encryptedPassword);
-    
-            Mono<UserEntityProof> savedUserMono = userRepository.save(user);
-    
-            // Guardar la relación entre el usuario y el rol en la tabla intermedia
-            Mono<RolUsuarioEntity> savedRolUsuarioMono = savedUserMono
-                .flatMap(savedUser -> rolRepository.findById(usuarioDto.getRole())
-                .flatMap(rol -> {
-                    System.out.println(rol.getId());
-                    System.out.println(savedUser.getId());
-                    RolUsuarioEntity rolUsuarioEntity = new RolUsuarioEntity(rol.getId(), savedUser.getId());
-                    //rolUsuarioEntity.setId(2L);
-                    return rolUsuarioRepository.save(rolUsuarioEntity);
-                }));
-    
-            // Combinar los resultados y retornar una respuesta HTTP
-            return savedRolUsuarioMono
-                .flatMap(savedRolUsuario -> ServerResponse.accepted().build())
-                .onErrorResume(Exception.class, (e) -> ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue("Se guardo el usuario, pero hay un error en el hilo"+e));
+            return existsByEmailMono.flatMap(exists -> {
+                if (exists) {
+                    return ServerResponse.badRequest().bodyValue("El correo ya está en uso");
+                }
+
+                Mono<Boolean> existsByUserMono = existsByUser(usuarioDto.getUsuarioId().trim());
+
+                return existsByUserMono.flatMap(existsUsername -> {
+                    if (existsUsername) {
+                        return ServerResponse.badRequest().bodyValue("Este usuario ya esta en uso");
+                    }
+                    String encryptedPassword = encryptPassword(usuarioDto.getPassword());
+
+                    String primerNombre, segundoNombre, primerApellido, segundoApellido;
+                    String[] nombres =usuarioDto.getNombres().split(" ");
+                    String[] apellidos =  usuarioDto.getApellidos().split(" ");
+
+                    primerNombre= nombres[0];
+                    segundoNombre=nombres.length > 1 ? nombres[1]: null;
+                    segundoNombre= segundoNombre != null ? segundoNombre.toUpperCase(): null;
+                    primerApellido=apellidos[0];
+                    segundoApellido=apellidos.length >1 ? nombres[1] : null;
+                    segundoApellido=segundoApellido != null ? segundoApellido.toUpperCase() : null;
+
+                    // Guardar el objeto UserEntityProof sin la relación con el rol
+
+                    Mono<UserEntityProof> savedUserMono = userRepository.insertUsername(usuarioDto.getEmail().trim(), encryptedPassword, usuarioDto.getLocalidadId(), usuarioDto.getTpDocumentoId(), usuarioDto.getUsuarioIdentificacion(), usuarioDto.getUsuarioEstado(), usuarioDto.getUsuarioId().trim().toUpperCase(), primerNombre.toUpperCase(), segundoNombre, primerApellido.toUpperCase(), segundoApellido, usuarioDto.getPerfilId());
+
+                    // Guardar la relación entre el usuario y el rol en la tabla intermedia
+                    Mono<RolUsuarioEntity> savedRolUsuarioMono = savedUserMono
+                            .flatMap(savedUser -> rolRepository.findById(usuarioDto.getRole())
+                                    .flatMap(rol -> {
+                                        System.out.println(savedUser.toString());
+                                        System.out.println(rol.getId());
+                                        RolUsuarioEntity rolUsuarioEntity = new RolUsuarioEntity(rol.getId(),
+                                                savedUser.getUsuarioId());
+                                        return rolUsuarioRepository.save(rolUsuarioEntity);
+                                    }));
+
+                    // Combinar los resultados y retornar una respuesta HTTP
+                    return savedRolUsuarioMono
+                            .flatMap(savedRolUsuario -> ServerResponse.accepted().build())
+                            .onErrorResume(Exception.class, (e) -> ServerResponse.status(HttpStatus.BAD_REQUEST)
+                                    .bodyValue("Se guardo el usuario, pero hay un error en el hilo" + e));
+                });
             });
         });
     }
@@ -153,5 +198,11 @@ public class PrincipalHandler {
                 .map(count -> count > 0)
                 .defaultIfEmpty(false);
     }
-    
+
+    public Mono<Boolean> existsByUser(String username) {
+        return userRepository.countByUsername(username)
+                .map(count -> count > 0)
+                .defaultIfEmpty(false);
+    }
+
 }

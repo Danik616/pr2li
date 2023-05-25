@@ -8,34 +8,50 @@ import org.springframework.data.relational.core.mapping.Table;
 @Table("rol_usuario")
 public class RolUsuarioEntity {
     @Id
-    private Long id;
+    private long id;
 
-    private Long rolId;
+    private long rolId;
     
     
-    private Long usuarioId;
+    private String usuarioId;
 
     
-    public RolUsuarioEntity(Long rolId, Long usuarioId) {
+    public RolUsuarioEntity(long rolId, String usuarioId) {
         this.rolId = rolId;
         this.usuarioId = usuarioId;
     }
 
-    public Long getId() {
+
+    public long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+
+    public void setId(long id) {
         this.id = id;
     }
 
-    public Long getRolId() {
+
+    public long getRolId() {
         return rolId;
     }
-    
-    public Long getUsuarioId() {
+
+
+    public void setRolId(long rolId) {
+        this.rolId = rolId;
+    }
+
+
+    public String getUsuarioId() {
         return usuarioId;
     }
+
+
+    public void setUsuarioId(String usuarioId) {
+        this.usuarioId = usuarioId;
+    }
+
+    
     
 }
 
