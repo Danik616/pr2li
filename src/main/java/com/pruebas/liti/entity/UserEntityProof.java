@@ -64,7 +64,7 @@ public class UserEntityProof {
 
     public UserEntityProof(String usuarioId, long localidadId, String tpDocumentoId, String usuarioIdentificacion, String usuarioClave,
             String usuarioEstado, String usuarionombre1, String usuarionombre2, String usuarionombre3,
-            String usuarionombre4, String usuarioCorreo) {
+            String usuarionombre4, String usuarioCorreo, long perfilId) {
         this.usuarioId = usuarioId;
         this.localidadId = localidadId;
         this.tpDocumentoId = tpDocumentoId;
@@ -76,6 +76,7 @@ public class UserEntityProof {
         this.usuarionombre3 = usuarionombre3;
         this.usuarionombre4 = usuarionombre4;
         this.usuarioCorreo = usuarioCorreo;
+        this.perfilId=perfilId;
     }
 
     public String getUsuarioCorreo() {
