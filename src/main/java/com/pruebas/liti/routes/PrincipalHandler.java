@@ -94,24 +94,10 @@ public class PrincipalHandler {
                 .switchIfEmpty(response401);
     }
 
-    public Mono<ServerResponse> listarUsuario(ServerRequest serverRequest) {
-        Flux<UserEntityProof> userFlux = userRepository.findAll();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        Flux<DataBuffer> jsonFlux = userFlux.map(user -> {
-            try {
-                String json = objectMapper.writeValueAsString(user);
-                byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
-                DataBuffer buffer = DefaultDataBufferFactory.sharedInstance.wrap(jsonBytes);
-                return buffer;
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("Error al convertir a JSON: " + e.getMessage());
-            }
-        });
+    public Mono<ServerResponse> listarUsuario(ServerRequest serverRequest){
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromDataBuffers(jsonFlux));
+                .body(userRepository.findAll(), UserEntityProof.class);
     }
 
     public Mono<ServerResponse> guardarUsuario(ServerRequest serverRequest) {
