@@ -3,11 +3,13 @@ package com.pruebas.liti.entity;
 import java.util.Date;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Table("usuario")
 
-public class UserEntityProof {
+public class UserEntityProof implements Persistable<String> {
 
     @Id
     private String usuarioId;
@@ -28,13 +30,13 @@ public class UserEntityProof {
 
     private String usuarioIdentificacion;
 
-    private String usuarionombre1;
+    private String usuarioNombre1;
 
-    private String usuarionombre2;
+    private String usuarioNombre2;
 
-    private String usuarionombre3;
+    private String usuarioNombre3;
 
-    private String usuarionombre4;
+    private String usuarioNombre4;
 
     private String usuarioCorreo;
 
@@ -54,6 +56,9 @@ public class UserEntityProof {
 
     private String sesionEstado;
 
+    @Transient
+    private boolean isNew = true;
+
     public UserEntityProof() {
     }
 
@@ -62,22 +67,27 @@ public class UserEntityProof {
         this.usuarioClave = usuarioClave;
     }
 
-    public UserEntityProof(String usuarioId, long localidadId, String tpDocumentoId, String usuarioIdentificacion, String usuarioClave,
-            String usuarioEstado, String usuarionombre1, String usuarionombre2, String usuarionombre3,
-            String usuarionombre4, String usuarioCorreo, long perfilId) {
-        this.usuarioId = usuarioId;
-        this.localidadId = localidadId;
-        this.tpDocumentoId = tpDocumentoId;
-        this.usuarioIdentificacion=usuarioIdentificacion;
-        this.usuarioClave = usuarioClave;
-        this.usuarioEstado = usuarioEstado;
-        this.usuarionombre1 = usuarionombre1;
-        this.usuarionombre2 = usuarionombre2;
-        this.usuarionombre3 = usuarionombre3;
-        this.usuarionombre4 = usuarionombre4;
-        this.usuarioCorreo = usuarioCorreo;
-        this.perfilId=perfilId;
+    public UserEntityProof(String usuarioId, long localidadId, String tpDocumentoId, String usuarioIdentificacion,
+            String usuarioClave,
+            String usuarioEstado, String usuarioNombre1, String usuarioNombre2, String usuarioNombre3,
+            String usuarioNombre4, String usuarioCorreo, long perfilId) {
+                this.usuarioId = usuarioId;
+                this.localidadId = localidadId;
+                this.perfilId = perfilId;
+                this.tpDocumentoId = tpDocumentoId;
+                this.usuarioClave = usuarioClave;
+                this.usuarioEstado = usuarioEstado;
+                this.usuarioIdentificacion = usuarioIdentificacion;
+                this.usuarioNombre1 = usuarioNombre1;
+                this.usuarioNombre2 = usuarioNombre2;
+                this.usuarioNombre3 = usuarioNombre3;
+                this.usuarioNombre4 = usuarioNombre4;
+                this.usuarioCorreo = usuarioCorreo;
+
     }
+
+    
+
 
     public String getUsuarioCorreo() {
         return usuarioCorreo;
@@ -159,36 +169,36 @@ public class UserEntityProof {
         this.usuarioIdentificacion = usuarioIdentificacion;
     }
 
-    public String getUsuarionombre1() {
-        return usuarionombre1;
+    public String getUsuarioNombre1() {
+        return usuarioNombre1;
     }
 
-    public void setUsuarionombre1(String usuarionombre1) {
-        this.usuarionombre1 = usuarionombre1;
+    public void setUsuarioNombre1(String usuarioNombre1) {
+        this.usuarioNombre1 = usuarioNombre1;
     }
 
-    public String getUsuarionombre2() {
-        return usuarionombre2;
+    public String getUsuarioNombre2() {
+        return usuarioNombre2;
     }
 
-    public void setUsuarionombre2(String usuarionombre2) {
-        this.usuarionombre2 = usuarionombre2;
+    public void setUsuarioNombre2(String usuarioNombre2) {
+        this.usuarioNombre2 = usuarioNombre2;
     }
 
-    public String getUsuarionombre3() {
-        return usuarionombre3;
+    public String getUsuarioNombre3() {
+        return usuarioNombre3;
     }
 
-    public void setUsuarionombre3(String usuarionombre3) {
-        this.usuarionombre3 = usuarionombre3;
+    public void setUsuarioNombre3(String usuarioNombre3) {
+        this.usuarioNombre3 = usuarioNombre3;
     }
 
-    public String getUsuarionombre4() {
-        return usuarionombre4;
+    public String getUsuarioNombre4() {
+        return usuarioNombre4;
     }
 
-    public void setUsuarionombre4(String usuarionombre4) {
-        this.usuarionombre4 = usuarionombre4;
+    public void setUsuarioNombre4(String usuarioNombre4) {
+        this.usuarioNombre4 = usuarioNombre4;
     }
 
     public String getUsuarioTelefono() {
@@ -260,12 +270,25 @@ public class UserEntityProof {
         return "UserEntityProof [usuarioId=" + usuarioId + ", localidadId=" + localidadId + ", perfilId=" + perfilId
                 + ", clienteId=" + clienteId + ", tpDocumentoId=" + tpDocumentoId + ", funcionarioId=" + funcionarioId
                 + ", usuarioClave=" + usuarioClave + ", usuarioEstado=" + usuarioEstado + ", usuarioIdentificacion="
-                + usuarioIdentificacion + ", usuarionombre1=" + usuarionombre1 + ", usuarionombre2=" + usuarionombre2
-                + ", usuarionombre3=" + usuarionombre3 + ", usuarionombre4=" + usuarionombre4 + ", usuarioCorreo="
+                + usuarioIdentificacion + ", usuarioNombre1=" + usuarioNombre1 + ", usuarioNombre2=" + usuarioNombre2
+                + ", usuarioNombre3=" + usuarioNombre3 + ", usuarioNombre4=" + usuarioNombre4 + ", usuarioCorreo="
                 + usuarioCorreo + ", usuarioTelefono=" + usuarioTelefono + ", usuarioDireccion=" + usuarioDireccion
                 + ", usuarioFax=" + usuarioFax + ", usuarioVisitas=" + usuarioVisitas + ", fechaIngreso=" + fechaIngreso
                 + ", fechaUltimaVisita=" + fechaUltimaVisita + ", sesionId=" + sesionId + ", sesionEstado="
                 + sesionEstado + "]";
     }
 
+    @Override
+    public String getId() {
+        return this.usuarioId;
+    }
+
+    @Override
+    public boolean isNew() {
+        return this.isNew;
+    }
+
+    public void setAsSaved() {
+        this.isNew = false;
+    }
 }

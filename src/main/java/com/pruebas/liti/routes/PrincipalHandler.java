@@ -143,15 +143,16 @@ public class PrincipalHandler {
                     String[] apellidos =  usuarioDto.getApellidos().split(" ");
 
                     primerNombre= nombres[0];
-                    segundoNombre=nombres.length > 1 ? nombres[1]: null;
-                    segundoNombre= segundoNombre != null ? segundoNombre.toUpperCase(): null;
+                    segundoNombre=nombres.length > 1 ? nombres[1]: "";
+                    segundoNombre= segundoNombre != null ? segundoNombre.toUpperCase(): "";
                     primerApellido=apellidos[0];
-                    segundoApellido=apellidos.length >1 ? nombres[1] : null;
-                    segundoApellido=segundoApellido != null ? segundoApellido.toUpperCase() : null;
+                    segundoApellido=apellidos.length >1 ? nombres[1] : "";
+                    segundoApellido=segundoApellido != null ? segundoApellido.toUpperCase() : "";
 
                     // Guardar el objeto UserEntityProof sin la relación con el rol
+                    UserEntityProof user= new UserEntityProof(usuarioDto.getUsuarioId().trim().toUpperCase(), usuarioDto.getLocalidadId(), usuarioDto.getTpDocumentoId(), usuarioDto.getUsuarioIdentificacion(), encryptedPassword, usuarioDto.getUsuarioEstado(), primerNombre.toUpperCase(), segundoNombre, primerApellido.toUpperCase(), segundoApellido, usuarioDto.getEmail().trim(), usuarioDto.getPerfilId());
 
-                    Mono<UserEntityProof> savedUserMono = userRepository.insertUsername(usuarioDto.getEmail().trim(), encryptedPassword, usuarioDto.getLocalidadId(), usuarioDto.getTpDocumentoId(), usuarioDto.getUsuarioIdentificacion(), usuarioDto.getUsuarioEstado(), usuarioDto.getUsuarioId().trim().toUpperCase(), primerNombre.toUpperCase(), segundoNombre, primerApellido.toUpperCase(), segundoApellido, usuarioDto.getPerfilId());
+                    Mono<UserEntityProof> savedUserMono = userRepository.save(user);
 
                     // Guardar la relación entre el usuario y el rol en la tabla intermedia
                     Mono<RolUsuarioEntity> savedRolUsuarioMono = savedUserMono
