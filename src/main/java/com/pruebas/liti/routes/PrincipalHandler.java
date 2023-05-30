@@ -15,6 +15,7 @@ import com.pruebas.liti.Repository.IRolProofRepository;
 import com.pruebas.liti.Repository.IUserProofRepository;
 import com.pruebas.liti.Repository.RolUsuarioRepository;
 import com.pruebas.liti.dto.UserDto;
+import com.pruebas.liti.dto.UserFindByIDDTO;
 import com.pruebas.liti.dto.UserLoginDto;
 import com.pruebas.liti.entity.RolUsuarioEntity;
 import com.pruebas.liti.entity.UserEntityProof;
@@ -89,6 +90,16 @@ public class PrincipalHandler {
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(userRepository.findAll(), UserEntityProof.class);
+    }
+
+    public Mono<ServerResponse> listarUsuarioPorID(ServerRequest serverRequest){
+        Mono<UserFindByIDDTO> userDto= serverRequest.bodyToMono(UserFindByIDDTO.class);
+        return userDto.flatMap(usuarioDto -> {
+            String username=usuarioDto.getUsername().toUpperCase();
+            System.out.println(username);
+            return userRepository.proof(username).flatMap(user -> ServerResponse.ok().body(user, UserEntityProof.class));
+        });
+        
     }
 
     public Mono<ServerResponse> guardarUsuario(ServerRequest serverRequest) {

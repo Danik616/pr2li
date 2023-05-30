@@ -14,6 +14,7 @@ public class PrincipalRoutes {
     public RouterFunction<ServerResponse> routerInit(PrincipalHandler principalHandler){
         return RouterFunctions.route(GET("/list-users"), principalHandler::listarUsuario)
             .andRoute(POST("/save"), principalHandler::guardarUsuario)
-            .andRoute(POST("/login"), principalHandler::iniciarSesión);
+            .andRoute(POST("/login"), principalHandler::iniciarSesión)
+            .andRoute(POST("/find-user-by-id"), principalHandler::listarUsuarioPorID);
     }
 }

@@ -26,4 +26,7 @@ public interface IUserProofRepository extends R2dbcRepository<UserEntityProof, S
             @Param("usuarioId") String usuarioId, @Param("nombre1") String nombre1, @Param("nombre2") String nombre2,
             @Param("apellido1") String apellido1, @Param("apellido2") String apellido2, @Param("perfilId") long perfilId);
 
+    @Query("SELECT * FROM USUARIO WHERE USUARIO_ID = :user")
+    Mono<UserEntityProof> proof(@Param("user") String user);
+
 }
