@@ -48,9 +48,9 @@ public class UserEntityProof implements Persistable<String> {
 
     private long usuarioVisitas;
 
-    private Date fechaIngreso;
+    private Date usuarioFechaIngreso;
 
-    private Date fechaUltimaVisita;
+    private Date usuarioFechaUltimaVisita;
 
     private String sesionId;
 
@@ -233,20 +233,20 @@ public class UserEntityProof implements Persistable<String> {
         this.usuarioVisitas = usuarioVisitas;
     }
 
-    public Date getFechaIngreso() {
-        return fechaIngreso;
+    public Date getUsuarioFechaIngreso() {
+        return usuarioFechaIngreso;
     }
 
-    public void setFechaIngreso(Date fechaIngreso) {
-        this.fechaIngreso = fechaIngreso;
+    public void setUsuarioFechaIngreso(Date usuarioFechaIngreso) {
+        this.usuarioFechaIngreso = usuarioFechaIngreso;
     }
 
-    public Date getFechaUltimaVisita() {
-        return fechaUltimaVisita;
+    public Date getUsuarioFechaUltimaVisita() {
+        return usuarioFechaUltimaVisita;
     }
 
-    public void setFechaUltimaVisita(Date fechaUltimaVisita) {
-        this.fechaUltimaVisita = fechaUltimaVisita;
+    public void setUsuarioFechaUltimaVisita(Date usuarioFechaUltimaVisita) {
+        this.usuarioFechaUltimaVisita = usuarioFechaUltimaVisita;
     }
 
     public String getSesionId() {
@@ -265,18 +265,6 @@ public class UserEntityProof implements Persistable<String> {
         this.sesionEstado = sesionEstado;
     }
 
-    @Override
-    public String toString() {
-        return "UserEntityProof [usuarioId=" + usuarioId + ", localidadId=" + localidadId + ", perfilId=" + perfilId
-                + ", clienteId=" + clienteId + ", tpDocumentoId=" + tpDocumentoId + ", funcionarioId=" + funcionarioId
-                + ", usuarioClave=" + usuarioClave + ", usuarioEstado=" + usuarioEstado + ", usuarioIdentificacion="
-                + usuarioIdentificacion + ", usuarioNombre1=" + usuarioNombre1 + ", usuarioNombre2=" + usuarioNombre2
-                + ", usuarioNombre3=" + usuarioNombre3 + ", usuarioNombre4=" + usuarioNombre4 + ", usuarioCorreo="
-                + usuarioCorreo + ", usuarioTelefono=" + usuarioTelefono + ", usuarioDireccion=" + usuarioDireccion
-                + ", usuarioFax=" + usuarioFax + ", usuarioVisitas=" + usuarioVisitas + ", fechaIngreso=" + fechaIngreso
-                + ", fechaUltimaVisita=" + fechaUltimaVisita + ", sesionId=" + sesionId + ", sesionEstado="
-                + sesionEstado + "]";
-    }
 
     @Override
     public String getId() {

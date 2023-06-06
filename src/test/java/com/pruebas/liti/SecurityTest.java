@@ -106,7 +106,7 @@ public void testRepository(){
 
 @Test
 public void test1(){
-    String email= "FMANZANO";
+    String email= "JMELO";
     
 
     Mono<UserEntityProof> pruebaMono = repository.findById(email.toUpperCase());
