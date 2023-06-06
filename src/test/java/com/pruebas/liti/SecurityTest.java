@@ -106,13 +106,13 @@ public void testRepository(){
 
 @Test
 public void test1(){
-    String email= "Jhon_doe";
+    String email= "FMANZANO";
     
 
     Mono<UserEntityProof> pruebaMono = repository.findById(email.toUpperCase());
     StepVerifier.create(pruebaMono)
                 .assertNext(user -> {
-                    boolean matches = user.getUsuarioCorreo().equals(email.toUpperCase());
+                    boolean matches = user.getUsuarioId().equals(email.toUpperCase());
                     assert matches : "email does not match";
                 })
                 .expectComplete()

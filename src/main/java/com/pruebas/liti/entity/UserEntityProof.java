@@ -7,7 +7,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
-@Table("usuario")
+@Table("usuarios")
 
 public class UserEntityProof implements Persistable<String> {
 
