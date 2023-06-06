@@ -6,7 +6,6 @@ import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.repository.query.Param;
 
 import com.pruebas.liti.entity.UserEntityProof;
-
 import reactor.core.publisher.Mono;
 
 public interface IUserProofRepository extends R2dbcRepository<UserEntityProof, String> {
@@ -27,6 +26,9 @@ public interface IUserProofRepository extends R2dbcRepository<UserEntityProof, S
             @Param("apellido1") String apellido1, @Param("apellido2") String apellido2, @Param("perfilId") long perfilId);
 
     @Query("SELECT * FROM USUARIOS WHERE USUARIO_ID = :user")
-    Mono<UserEntityProof> proof(@Param("user") String user);
+    Mono<UserEntityProof> findByIdUser(@Param("user") String user);
+
+    @Query("SELECT count(*) from usuarios WHERE USUARIO_ID = :user AND TOOLKIT.DECRYPT (USUARIO_CLAVE) = :password")
+    Mono<Integer> validatePassword(@Param("user") String user, @Param("password") String password);
 
 }

@@ -35,7 +35,7 @@ public class UserServices implements IUserServices{
     @Override
     public Mono<UserDetails> findByUsername(String username) {
         String user = username.trim();
-        return userRepository.findById(user).flatMap( account -> {
+        return userRepository.findByIdUser(user).flatMap( account -> {
             Mono<List<RolEntityProof>> rolesMono = 
                         rolUsuarioRepository.findByUserId(account.getUsuarioId())
                             .flatMap(rolUsuario -> rolRepository.findById(rolUsuario.getRolId()))

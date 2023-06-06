@@ -6,7 +6,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -41,9 +40,6 @@ public class PrincipalHandler {
     private UserServices userServices;
 
     @Autowired
-    public BCryptPasswordEncoder passwordEncoder;
-
-    @Autowired
     public JwtUtil jwtUtil;
 
     @Autowired
@@ -57,28 +53,33 @@ public class PrincipalHandler {
     // ServerResponse.status(HttpStatus.NOT_ACCEPTABLE).build();
     private Mono<ServerResponse> response401 = ServerResponse.status(HttpStatus.UNAUTHORIZED).build();
 
-    public Mono<ServerResponse> iniciarSesión(ServerRequest serverRequest) {
+    public Mono<ServerResponse> iniciarSesion(ServerRequest serverRequest) {
         Mono<UserLoginDto> loginRequest = serverRequest.bodyToMono(UserLoginDto.class);
 
         return loginRequest
                 .flatMap(form -> {
                     return userServices.findByUsername(form.getUsername().toUpperCase())
                             .flatMap(userDetails -> {
-                                if (passwordEncoder.matches(form.getPassword(), userDetails.getPassword())) {
-                                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                                            userDetails.getUsername(), userDetails.getPassword(),
-                                            userDetails.getAuthorities());
-                                    SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                                    String authJwt = userDetails.getUsername();
-                                    return jwtUtil.generateToken(authJwt).flatMap(token -> {
-                                        securityContext.setAuthentication(authentication);
-                                        jwt.setJwt(token);
-                                        return ServerResponse.ok()
-                                                .bodyValue(new AuthResponse(true, token, "Login successful"));
-                                    });
-                                } else {
-                                    return response401;
-                                }
+                                return userRepository.validatePassword(form.getUsername(), form.getPassword())
+                                        .flatMap(valid -> {
+                                            if (valid == 1) {
+                                                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                                        userDetails.getUsername(), userDetails.getPassword(),
+                                                        userDetails.getAuthorities());
+                                                SecurityContext securityContext = SecurityContextHolder
+                                                        .createEmptyContext();
+                                                String authJwt = userDetails.getUsername();
+                                                return jwtUtil.generateToken(authJwt).flatMap(token -> {
+                                                    securityContext.setAuthentication(authentication);
+                                                    jwt.setJwt(token);
+                                                    return ServerResponse.ok()
+                                                            .bodyValue(
+                                                                    new AuthResponse(true, token, "Login successful"));
+                                                });
+                                            } else {
+                                                return response401;
+                                            }
+                                        });
                             }).switchIfEmpty(response401);
                 })
                 .onErrorResume(Exception.class,
@@ -86,20 +87,20 @@ public class PrincipalHandler {
                 .switchIfEmpty(response401);
     }
 
-    public Mono<ServerResponse> listarUsuario(ServerRequest serverRequest){
+    public Mono<ServerResponse> listarUsuario(ServerRequest serverRequest) {
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(userRepository.findAll(), UserEntityProof.class);
     }
 
-    public Mono<ServerResponse> listarUsuarioPorID(ServerRequest serverRequest){
-        Mono<UserFindByIDDTO> userDto= serverRequest.bodyToMono(UserFindByIDDTO.class);
+    public Mono<ServerResponse> listarUsuarioPorID(ServerRequest serverRequest) {
+        Mono<UserFindByIDDTO> userDto = serverRequest.bodyToMono(UserFindByIDDTO.class);
         return userDto.flatMap(usuarioDto -> {
-            String username=usuarioDto.getUsername().toUpperCase();
+            String username = usuarioDto.getUsername().toUpperCase();
             System.out.println(username);
-            return userRepository.proof(username).flatMap(user -> ServerResponse.ok().bodyValue(user));
+            return userRepository.findByIdUser(username).flatMap(user -> ServerResponse.ok().bodyValue(user));
         });
-        
+
     }
 
     public Mono<ServerResponse> guardarUsuario(ServerRequest serverRequest) {
@@ -124,21 +125,24 @@ public class PrincipalHandler {
                     if (existsUsername) {
                         return ServerResponse.badRequest().bodyValue("Este usuario ya esta en uso");
                     }
-                    String encryptedPassword = encryptPassword(usuarioDto.getPassword());
 
                     String primerNombre, segundoNombre, primerApellido, segundoApellido;
-                    String[] nombres =usuarioDto.getNombres().split(" ");
-                    String[] apellidos =  usuarioDto.getApellidos().split(" ");
+                    String[] nombres = usuarioDto.getNombres().split(" ");
+                    String[] apellidos = usuarioDto.getApellidos().split(" ");
 
-                    primerNombre= nombres[0];
-                    segundoNombre=nombres.length > 1 ? nombres[1]: "";
-                    segundoNombre= segundoNombre != null ? segundoNombre.toUpperCase(): "";
-                    primerApellido=apellidos[0];
-                    segundoApellido=apellidos.length >1 ? nombres[1] : "";
-                    segundoApellido=segundoApellido != null ? segundoApellido.toUpperCase() : "";
+                    primerNombre = nombres[0];
+                    segundoNombre = nombres.length > 1 ? nombres[1] : "";
+                    segundoNombre = segundoNombre != null ? segundoNombre.toUpperCase() : "";
+                    primerApellido = apellidos[0];
+                    segundoApellido = apellidos.length > 1 ? nombres[1] : "";
+                    segundoApellido = segundoApellido != null ? segundoApellido.toUpperCase() : "";
 
                     // Guardar el objeto UserEntityProof sin la relación con el rol
-                    UserEntityProof user= new UserEntityProof(usuarioDto.getUsuarioId().trim().toUpperCase(), usuarioDto.getLocalidadId(), usuarioDto.getTpDocumentoId(), usuarioDto.getUsuarioIdentificacion(), encryptedPassword, usuarioDto.getUsuarioEstado(), primerNombre.toUpperCase(), segundoNombre, primerApellido.toUpperCase(), segundoApellido, usuarioDto.getEmail().trim(), usuarioDto.getPerfilId());
+                    UserEntityProof user = new UserEntityProof(usuarioDto.getUsuarioId().trim().toUpperCase(),
+                            usuarioDto.getLocalidadId(), usuarioDto.getTpDocumentoId(),
+                            usuarioDto.getUsuarioIdentificacion(), usuarioDto.getPassword(), usuarioDto.getUsuarioEstado(),
+                            primerNombre.toUpperCase(), segundoNombre, primerApellido.toUpperCase(), segundoApellido,
+                            usuarioDto.getEmail().trim(), usuarioDto.getPerfilId());
 
                     Mono<UserEntityProof> savedUserMono = userRepository.save(user);
 
@@ -174,11 +178,6 @@ public class PrincipalHandler {
         // $ -> Fin de línea
 
         return email.matches(patron);
-    }
-
-    private String encryptPassword(String password) {
-        password = passwordEncoder.encode(password);
-        return password;
     }
 
     public Mono<Boolean> existsByEmail(String email) {
