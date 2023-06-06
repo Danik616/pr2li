@@ -1,6 +1,6 @@
 package com.pruebas.liti.entity;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -48,9 +48,9 @@ public class UserEntityProof implements Persistable<String> {
 
     private long usuarioVisitas;
 
-    private Date usuarioFechaIngreso;
+    private LocalDateTime usuarioFechaIngreso;
 
-    private Date usuarioFechaUltimaVisita;
+    private LocalDateTime usuarioFechaUltimaVisita;
 
     private String sesionId;
 
@@ -233,19 +233,19 @@ public class UserEntityProof implements Persistable<String> {
         this.usuarioVisitas = usuarioVisitas;
     }
 
-    public Date getUsuarioFechaIngreso() {
+    public LocalDateTime getUsuarioFechaIngreso() {
         return usuarioFechaIngreso;
     }
 
-    public void setUsuarioFechaIngreso(Date usuarioFechaIngreso) {
+    public void setUsuarioFechaIngreso(LocalDateTime usuarioFechaIngreso) {
         this.usuarioFechaIngreso = usuarioFechaIngreso;
     }
 
-    public Date getUsuarioFechaUltimaVisita() {
+    public LocalDateTime getUsuarioFechaUltimaVisita() {
         return usuarioFechaUltimaVisita;
     }
 
-    public void setUsuarioFechaUltimaVisita(Date usuarioFechaUltimaVisita) {
+    public void setUsuarioFechaUltimaVisita(LocalDateTime usuarioFechaUltimaVisita) {
         this.usuarioFechaUltimaVisita = usuarioFechaUltimaVisita;
     }
 

@@ -97,7 +97,7 @@ public class PrincipalHandler {
         return userDto.flatMap(usuarioDto -> {
             String username=usuarioDto.getUsername().toUpperCase();
             System.out.println(username);
-            return userRepository.proof(username).flatMap(user -> ServerResponse.ok().body(user, UserEntityProof.class));
+            return userRepository.proof(username).flatMap(user -> ServerResponse.ok().bodyValue(user));
         });
         
     }
