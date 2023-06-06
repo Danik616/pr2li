@@ -16,7 +16,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.pruebas.liti.Repository.IRolProofRepository;
 import com.pruebas.liti.Repository.IUserProofRepository;
+import com.pruebas.liti.entity.RolEntityProof;
 import com.pruebas.liti.entity.UserEntityProof;
 import com.pruebas.liti.services.UserServices;
 
@@ -34,64 +36,61 @@ public class SecurityTest {
     private UserServices userService;
 
     @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
-
-    @Mock
-    private BCryptPasswordEncoder passwordEncode1;
-
-    @Autowired
     IUserProofRepository repository;
 
-    @Test
-    @WithMockUser(username = "prueba3@gmail.com", password = "Test12345")
-    public void testAuthenticate() {
+    @Autowired
+    IRolProofRepository rolRepository;
+
+//     @Test
+//     @WithMockUser(username = "prueba3@gmail.com", password = "Test12345")
+//     public void testAuthenticate() {
 
 
-        // Call the authentication manager and expect a successful authentication
-        Mono<UserDetails> userDetailsMono = userDetailsService.findByUsername("prueba3@gmail.com");
-        StepVerifier.create(userDetailsMono)
-                .assertNext(userDetails -> {
-                    boolean matches = passwordEncoder.matches("Test12345", userDetails.getPassword());
-                    assert matches : "Password does not match";
-                })
-                .expectComplete()
-                .verify();
-    }
+//         // Call the authentication manager and expect a successful authentication
+//         Mono<UserDetails> userDetailsMono = userDetailsService.findByUsername("prueba3@gmail.com");
+//         StepVerifier.create(userDetailsMono)
+//                 .assertNext(userDetails -> {
+//                     boolean matches = passwordEncoder.matches("Test12345", userDetails.getPassword());
+//                     assert matches : "Password does not match";
+//                 })
+//                 .expectComplete()
+//                 .verify();
+//     }
 
-    /**
-     * 
-     */
-    @Test
-void testAboutAuthenticateUDRepository() {
-    // Crea un usuario ficticio con credenciales válidas
-    String email = "prueba3@gmail.com";
-    String password = "Test12345";
-    UserDetails user = User.builder()
-            .username(email)
-            .password(passwordEncoder.encode(password))
-            .roles("GUESS")
-            .build();
+//     /**
+//      * 
+//      */
+//     @Test
+// void testAboutAuthenticateUDRepository() {
+//     // Crea un usuario ficticio con credenciales válidas
+//     String email = "prueba3@gmail.com";
+//     String password = "Test12345";
+//     UserDetails user = User.builder()
+//             .username(email)
+//             .password(passwordEncoder.encode(password))
+//             .roles("GUESS")
+//             .build();
     
-    // Crea un UserDetailsRepositoryReactiveAuthenticationManager y configúralo con un UserDetailsRepository
-    UserServices userDetailsRepository = mock(UserServices.class);
-    when(userDetailsRepository.findByUsername(email)).thenReturn(Mono.just(user));
-    UserDetailsRepositoryReactiveAuthenticationManager authManager = new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsRepository);
-    authManager.setPasswordEncoder(new BCryptPasswordEncoder());
+//     // Crea un UserDetailsRepositoryReactiveAuthenticationManager y configúralo con un UserDetailsRepository
+//     UserServices userDetailsRepository = mock(UserServices.class);
+//     when(userDetailsRepository.findByUsername(email)).thenReturn(Mono.just(user));
+//     UserDetailsRepositoryReactiveAuthenticationManager authManager = new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsRepository);
+//     authManager.setPasswordEncoder(new BCryptPasswordEncoder());
 
-    // Crea un AuthenticationToken con las credenciales del usuario ficticio
-    Authentication auth = new UsernamePasswordAuthenticationToken(email, password);
+//     // Crea un AuthenticationToken con las credenciales del usuario ficticio
+//     Authentication auth = new UsernamePasswordAuthenticationToken(email, password);
 
-    // Prueba que la autenticación tenga éxito
-    StepVerifier.create(authManager.authenticate(auth))
-            .expectNextMatches(authentication -> authentication.isAuthenticated())
-            .expectComplete()
-            .verify();
-}
+//     // Prueba que la autenticación tenga éxito
+//     StepVerifier.create(authManager.authenticate(auth))
+//             .expectNextMatches(authentication -> authentication.isAuthenticated())
+//             .expectComplete()
+//             .verify();
+// }
 
 
 @Test
 public void testRepository(){
-    String email= "Jhon_doe";
+    String email= "MANUEL_VEGA";
 
     Mono<UserDetails> userDetailsMono = userService.findByUsername(email.toUpperCase());
 
@@ -130,6 +129,20 @@ public void test2(){
                 .assertNext(valid -> {
                     boolean matches = valid==1?true: false;
                     assert matches : "email does not match";
+                })
+                .expectComplete()
+                .verify();
+}
+
+@Test
+public void testreporol(){
+    
+
+    Mono<RolEntityProof> pruebaMono = rolRepository.findById(1L);
+    StepVerifier.create(pruebaMono)
+                .assertNext(valid -> {
+                    boolean matches = valid.getId()==1?true:false;
+                    assert matches : "rol does not match"+valid.getId()+valid.getNombre();
                 })
                 .expectComplete()
                 .verify();

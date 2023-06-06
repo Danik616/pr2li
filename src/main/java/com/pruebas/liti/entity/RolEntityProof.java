@@ -8,28 +8,28 @@ import org.springframework.data.relational.core.mapping.Table;
 @Table("roles")
 public class RolEntityProof {
     @Id
-    private long id;
+    private long rolId;
 
-    private String nombre;
+    private String rolNombre;
 
 
     public RolEntityProof() {
     }
 
     public long getId() {
-        return id;
+        return rolId;
     }
 
     public void setId(long id) {
-        this.id = id;
+        this.rolId = id;
     }
 
     public String getNombre() {
-        return nombre;
+        return rolNombre;
     }
 
     public void setNombre(String nombre) {
-        this.nombre = nombre;
+        this.rolNombre = nombre;
     }
 
 }

@@ -36,6 +36,7 @@ public class UserServices implements IUserServices{
     public Mono<UserDetails> findByUsername(String username) {
         String user = username.trim();
         return userRepository.findByIdUser(user).flatMap( account -> {
+            System.out.print(account);
             Mono<List<RolEntityProof>> rolesMono = 
                         rolUsuarioRepository.findByUserId(account.getUsuarioId())
                             .flatMap(rolUsuario -> rolRepository.findById(rolUsuario.getRolId()))
@@ -45,7 +46,6 @@ public class UserServices implements IUserServices{
                         List<GrantedAuthority> authorities = roles.stream()
                             .map(rol -> new SimpleGrantedAuthority(rol.getNombre()))
                             .collect(Collectors.toList());
-                        
                         return User.builder()
                             .username(acc.getUsuarioId())
                             .password(acc.getUsuarioClave())

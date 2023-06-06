@@ -15,6 +15,7 @@ public class PrincipalRoutes {
         return RouterFunctions.route(GET("/list-users"), principalHandler::listarUsuario)
             .andRoute(POST("/save"), principalHandler::guardarUsuario)
             .andRoute(POST("/login"), principalHandler::iniciarSesion)
-            .andRoute(POST("/find-user-by-id"), principalHandler::listarUsuarioPorID);
+            .andRoute(POST("/find-user-by-id"), principalHandler::listarUsuarioPorID)
+            .andRoute(GET("/logout"), principalHandler::logout);
     }
 }

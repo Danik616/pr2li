@@ -60,7 +60,7 @@ public class PrincipalHandler {
                 .flatMap(form -> {
                     return userServices.findByUsername(form.getUsername().toUpperCase())
                             .flatMap(userDetails -> {
-                                return userRepository.validatePassword(form.getUsername(), form.getPassword())
+                                return userRepository.validatePassword(userDetails.getUsername(), form.getPassword())
                                         .flatMap(valid -> {
                                             if (valid == 1) {
                                                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -165,6 +165,11 @@ public class PrincipalHandler {
                 });
             });
         });
+    }
+
+    public Mono<ServerResponse> logout(ServerRequest serverRequest){
+        jwt.setJwt(null);
+        return ServerResponse.ok().build();
     }
 
     private boolean isValidEmail(String email) {
